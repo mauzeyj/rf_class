@@ -27,25 +27,26 @@ def step(state):
     action = state[2]
     score = state[3]
     if action == 'done':
-        dealer = draw()
-        player = draw()
+        dealer = card()
+        player = card()
         action = 'start'
     if action == 'hit':
         player = player + draw()
         if player > 21:
-            score[1] = score[1] + 1
+            score = -1
             action = 'done'
     if action == 'stick':
         if dealer < 17:
             while dealer < 17:
                 dealer = dealer + draw()
         if dealer > 21:
-            score[0] = score[0] + 1
+            score = 1
         if dealer >= 17:
             if dealer == player:
-                score = score
+                score = 0
             if dealer > player:
-                score[1] = score[1] + 1
+                score = -1
             if player > dealer:
-                score[0] = score[0] + 1
+                score = 1
+        action = 'done'
     return [dealer, player, action, score]
