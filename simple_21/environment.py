@@ -7,7 +7,7 @@ def card():
 
 def color():
     n = np.random.rand()
-    if n >= .333333:
+    if n <= .333333:
         return 'r'
     else:
         return 'b'
@@ -26,7 +26,7 @@ def step(state):
     player = state[1]
     action = state[2]
     score = state[3]
-    if action == 'done':
+    if action == 'other':
         dealer = card()
         player = card()
         action = 'start'
@@ -36,17 +36,15 @@ def step(state):
             score = -1
             action = 'done'
     if action == 'stick':
-        if dealer < 17:
-            while dealer < 17:
-                dealer = dealer + draw()
+        while dealer < 17:
+            dealer = dealer + draw()
         if dealer > 21:
             score = 1
-        if dealer >= 17:
-            if dealer == player:
-                score = 0
-            if dealer > player:
-                score = -1
-            if player > dealer:
-                score = 1
+        if dealer == player:
+            score = 0
+        if dealer > player:
+            score = -1
+        if player > dealer:
+            score = 1
         action = 'done'
     return [dealer, player, action, score]
