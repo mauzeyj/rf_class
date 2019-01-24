@@ -26,49 +26,67 @@ def random_action():
         return 'stick'
 
 
-states = []  # should be state_actions?
-action_rewards = []  # should be rewards?
+states = []
+action_rewards = []
 
-# does state exist
-# actions/rewards list should have [stick_reward, hit_reward, evaluations]
-for x in range(50000):
+# TODO why are my numbers shifted lower.  Expect 21 to have argmax of around 1
+for x in range(5000000):
         state = [0, 0, 'other', np.nan]
         state = step(state)
+        current_states_index = []
+        current_actions = []
         while state[2] != 'done':
+
             while state[1] < 10:
                 state[2] = 'hit'
                 state = step(state)
             if state[:2] in states:
                 # previous_state = state[2:]
                 index = states.index(state[:2])
+                current_states_index.append(index)
                 actions = action_rewards[index]
                 previous_rewards = action_rewards[index]
                 if egreedy_exploration(previous_rewards[2]) < np.random.random():
                     previous_action = random_action()
                     state[2] = previous_action
+                    current_actions.append(previous_action)
                 elif previous_rewards[0] == previous_rewards[1]:
                     previous_action = random_action()
                     state[2] = previous_action
+                    current_actions.append(previous_action)
                 else:
                     if previous_rewards[0] > previous_rewards[1]:
                         previous_action = 'stick'
                         state[2] = previous_action
+                        current_actions.append(previous_action)
                     else:
                         previous_action = 'hit'
                         state[2] = previous_action
+                        current_actions.append(previous_action)
                 state = step(state)
                 if state[2] == 'done':
-                    # if state[:2] in states:
-                    #     index = states.index(state[:2])
-                    if previous_action == 'stick':
-                        action_rewards[index][0] = incremental_mean(state[3],
-                                                                    previous_rewards[0],
-                                                                    previous_rewards[2])
-                    elif previous_action == 'hit':
-                        action_rewards[index][1] = incremental_mean(state[3],
-                                                                    previous_rewards[1],
-                                                                    previous_rewards[2])
-                    action_rewards[index][2] = action_rewards[index][2] + 1
+                    for cur_state in range(len(current_states_index)):
+                        if previous_action == 'stick':
+                            action_rewards[current_states_index[cur_state]][0] = incremental_mean(state[3],
+                                                                                                  action_rewards[
+                                                                                                      current_states_index[
+                                                                                                          cur_state]][
+                                                                                                      0],
+                                                                                                  action_rewards[
+                                                                                                      current_states_index[
+                                                                                                          cur_state]][
+                                                                                                      2])
+                        elif previous_action == 'hit':
+                            action_rewards[current_states_index[cur_state]][1] = incremental_mean(state[3],
+                                                                                                  action_rewards[
+                                                                                                      current_states_index[
+                                                                                                          cur_state]][
+                                                                                                      1],
+                                                                                                  action_rewards[
+                                                                                                      current_states_index[
+                                                                                                          cur_state]][
+                                                                                                      2])
+                        action_rewards[current_states_index[cur_state]][2] = action_rewards[index][2] + 1
             else:
                 states.append(state[:2])
                 action_rewards.append([0, 0, 1])
@@ -80,3 +98,24 @@ import pandas as pd
 action_df = pd.DataFrame(action_rewards, columns=['stick', 'hit', 'visits'])
 state_df = pd.DataFrame(states, columns=['dealer', 'player'])
 df = pd.concat([action_df, state_df], axis=1)
+df['max'] = df[['hit', 'stick']].max(axis=1)
+df.to_csv('monte_carlo.csv')
+
+# %%
+
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
+plt.style.use('fivethirtyeight')
+
+fig = plt.figure(figsize=(14, 8))
+
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('dealer')
+ax.set_ylabel('player')
+ax.set_zlabel('value')
+ax.set_ylim(12, 21)
+ax.view_init(25, -35)
+surf = ax.plot_trisurf(df['dealer'], df['player'], df['max'], cmap=cm.coolwarm)
+fig.colorbar(surf)
+plt.show()
