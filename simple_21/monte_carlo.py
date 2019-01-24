@@ -33,7 +33,7 @@ states = []
 action_rewards = []
 
 # TODO why are my numbers shifted lower.  Expect 21 to have argmax of around 1
-for x in range(5000000):
+for x in range(50):
         state = [0, 0, 'other', np.nan]
         state = step(state)
         current_states_index = []
