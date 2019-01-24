@@ -1,5 +1,8 @@
 # %%
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib import cm
 
 from simple_21.environment import step
 
@@ -93,7 +96,6 @@ for x in range(5000000):
 
 # %%
 
-import pandas as pd
 
 action_df = pd.DataFrame(action_rewards, columns=['stick', 'hit', 'visits'])
 state_df = pd.DataFrame(states, columns=['dealer', 'player'])
@@ -103,8 +105,6 @@ df.to_csv('monte_carlo.csv')
 
 # %%
 
-import matplotlib.pyplot as plt
-from matplotlib import cm
 
 plt.style.use('fivethirtyeight')
 
