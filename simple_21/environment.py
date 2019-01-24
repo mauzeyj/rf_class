@@ -21,7 +21,7 @@ def draw():
     return c
 
 
-def step(state):
+def step(state):  # TODO fix environment to represent full
     dealer = state[0]
     player = state[1]
     action = state[2]

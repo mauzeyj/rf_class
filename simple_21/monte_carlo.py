@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 
 from simple_21.environment import step
 
-
+Axes3D
 def incremental_mean(x, u, k):
     """
     calculates incremental mean
