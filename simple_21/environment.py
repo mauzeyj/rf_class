@@ -21,30 +21,42 @@ def draw():
     return c
 
 
-def step(state):  # TODO fix environment to represent full
+def step(state):
+    """
+    states: 0 = hit, 1 = stick, 2 = done, 3 = start
+    :param state:
+    :return:
+    """
     dealer = state[0]
     player = state[1]
     action = state[2]
     score = state[3]
-    if action == 'other':
+    if action == 3:
         dealer = card()
         player = card()
-        action = 'start'
-    if action == 'hit':
+        action = np.nan
+    if action == 0:
         player = player + draw()
         if player > 21:
             score = -1
-            action = 'done'
-    if action == 'stick':
+            action = 2
+        if player < 0:
+            score = -1
+            action = 2
+    if action == 1:
         while dealer < 17:
             dealer = dealer + draw()
-        if dealer > 21:
-            score = 1
         if dealer == player:
             score = 0
-        if dealer > player:
-            score = -1
-        if player > dealer:
+            action = 2
+        elif dealer > 21:
             score = 1
-        action = 'done'
+            action = 2
+        elif dealer > player:
+            score = -1
+            action = 2
+        elif player > dealer:
+            score = 1
+            action = 2
+
     return [dealer, player, action, score]
