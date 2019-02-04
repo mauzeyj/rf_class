@@ -1,50 +1,56 @@
 import numpy as np
 
 
-def card():
-    return np.random.randint(1, 11)
+class twenty_one():
+    def __init__(self):
+        self.action_space = [1, 0]
+        self.state = None
 
+    def reset(self):
+        self.state = np.array(
+            [twenty_one.card(self), twenty_one.card(self)]), np.nan, False, {}  # dealer player reward done info
 
-def color():
-    n = np.random.rand()
-    if n <= .333333:
-        return 'r'
-    else:
-        return 'b'
+    def card(self):
+        return np.random.randint(1, 11)
 
+    def color(self):
+        n = np.random.rand()
+        if n <= .333333:
+            return 'r'
+        else:
+            return 'b'
 
-def draw():
-    if color() == 'r':
-        c = card() * -1
-    else:
-        c = card()
-    return c
+    def draw(self):
+        if twenty_one.color(self) == 'r':
+            c = twenty_one.card(self) * -1
+        else:
+            c = twenty_one.card(self)
+        return c
 
-
-def step(state):
-    dealer = state[0]
-    player = state[1]
-    action = state[2]
-    score = state[3]
-    if action == 'other':
-        dealer = card()
-        player = card()
-        action = 'start'
-    if action == 'hit':
-        player = player + draw()
-        if player > 21:
-            score = -1
-            action = 'done'
-    if action == 'stick':
-        while dealer < 17:
-            dealer = dealer + draw()
-        if dealer > 21:
-            score = 1
-        if dealer == player:
-            score = 0
-        if dealer > player:
-            score = -1
-        if player > dealer:
-            score = 1
-        action = 'done'
-    return [dealer, player, action, score]
+    def step(self, action):
+        state = self.state
+        dealer, player = state[0]
+        reward = None
+        done = False
+        if action == 1:
+            player = player + twenty_one.draw(self)
+            if player > 21:
+                reward = -1
+                done = True
+            if player < 1:
+                reward = -1
+                done = True
+        if action == 0:
+            while dealer < 17:
+                dealer = dealer + twenty_one.draw(self)
+            if dealer > 21:
+                reward = 1
+            elif dealer == player:
+                reward = 0
+            elif dealer > player:
+                reward = -1
+            elif player > dealer:
+                reward = 1
+            done = True
+        self.state = np.array([dealer, player]), reward, done, {}
+        return np.array([dealer, player]), reward, done, {}
