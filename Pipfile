@@ -11,6 +11,8 @@ pandas = "*"
 
 [dev-packages]
 matplotlib = "*"
+plotly = "*"
+jupyter = "*"
 
 [requires]
 python_version = "3.6"

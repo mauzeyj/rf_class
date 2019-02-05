@@ -5,7 +5,7 @@ import pandas as pd
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
-from simple_21.environment import step
+from simple_21.environment import twenty_one
 
 Axes3D
 def incremental_mean(x, u, k):
@@ -25,75 +25,71 @@ def egreedy_exploration(k, k_fixed=100):
 
 def random_action():
     if np.random.random() > .5:
-        return 'hit'
+        return 1
     else:
-        return 'stick'
+        return 0
 
 
 states = []
 action_rewards = []
 
 # TODO why are my numbers shifted lower.  Expect 21 to have argmax of around 1
-for x in range(50):
-        state = [0, 0, 'other', np.nan]
-        state = step(state)
+env = twenty_one()
+
+for x in range(5000000):
+    state = env.reset()
         current_states_index = []
         current_actions = []
-        while state[2] != 'done':
-
-            while state[1] < 10:
-                state[2] = 'hit'
-                state = step(state)
-            if state[:2] in states:
-                # previous_state = state[2:]
-                index = states.index(state[:2])
+    done = False
+    while done != True:
+        state = list(env.state)
+        if state in states:
+            index = states.index(state)
                 current_states_index.append(index)
                 actions = action_rewards[index]
                 previous_rewards = action_rewards[index]
                 if egreedy_exploration(previous_rewards[2]) < np.random.random():
-                    previous_action = random_action()
-                    state[2] = previous_action
-                    current_actions.append(previous_action)
+                    action = random_action()
+                    current_actions.append(action)
                 elif previous_rewards[0] == previous_rewards[1]:
-                    previous_action = random_action()
-                    state[2] = previous_action
-                    current_actions.append(previous_action)
+                    action = random_action()
+                    current_actions.append(action)
                 else:
                     if previous_rewards[0] > previous_rewards[1]:
-                        previous_action = 'stick'
-                        state[2] = previous_action
-                        current_actions.append(previous_action)
+                        action = 0
+
+                        current_actions.append(action)
                     else:
-                        previous_action = 'hit'
-                        state[2] = previous_action
-                        current_actions.append(previous_action)
-                state = step(state)
-                if state[2] == 'done':
-                    for cur_state in range(len(current_states_index)):
-                        if previous_action == 'stick':
-                            action_rewards[current_states_index[cur_state]][0] = incremental_mean(state[3],
-                                                                                                  action_rewards[
-                                                                                                      current_states_index[
-                                                                                                          cur_state]][
-                                                                                                      0],
-                                                                                                  action_rewards[
-                                                                                                      current_states_index[
-                                                                                                          cur_state]][
-                                                                                                      2])
-                        elif previous_action == 'hit':
-                            action_rewards[current_states_index[cur_state]][1] = incremental_mean(state[3],
-                                                                                                  action_rewards[
-                                                                                                      current_states_index[
-                                                                                                          cur_state]][
-                                                                                                      1],
-                                                                                                  action_rewards[
-                                                                                                      current_states_index[
-                                                                                                          cur_state]][
-                                                                                                      2])
-                        action_rewards[current_states_index[cur_state]][2] = action_rewards[index][2] + 1
-            else:
-                states.append(state[:2])
-                action_rewards.append([0, 0, 1])
+                        action = 1
+                        current_actions.append(action)
+            state, reward, done, meta = env.step(action)
+        else:
+            states.append(state[:2])
+            action_rewards.append([0, 0, 1])
+
+        for cur_state in range(len(current_states_index)):
+            if action == 0:
+                action_rewards[current_states_index[cur_state]][0] = incremental_mean(reward,
+                                                                                      action_rewards[
+                                                                                          current_states_index[
+                                                                                              cur_state]][
+                                                                                          0],
+                                                                                      action_rewards[
+                                                                                          current_states_index[
+                                                                                              cur_state]][
+                                                                                          2])
+            elif action == 1:
+                action_rewards[current_states_index[cur_state]][1] = incremental_mean(reward,
+                                                                                      action_rewards[
+                                                                                          current_states_index[
+                                                                                              cur_state]][
+                                                                                          1],
+                                                                                      action_rewards[
+                                                                                          current_states_index[
+                                                                                              cur_state]][
+                                                                                          2])
+            action_rewards[current_states_index[cur_state]][2] = action_rewards[index][2] + 1
+
 
 # %%
 

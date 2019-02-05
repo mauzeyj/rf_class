@@ -1,10 +1,10 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from simple_21.environment import step
+import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 
+from simple_21.environment import step
 
 Axes3D
 """
@@ -119,7 +119,6 @@ for x in range(1000):
                  Q[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]])
         for x in states:
             Q[x[0] - 1, x[1] - 1, x[2]] = Q[x[0] - 1, x[1] - 1, x[2]] + ((a * d) * E[x[0] - 1, x[0] - 1, x[2]])
-
 
 # %%
 # TODO visualize the Q max surface
