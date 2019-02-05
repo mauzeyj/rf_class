@@ -1,26 +1,12 @@
-# TODO Video 5 45:00  has psuedo code for sarsa and 1:05:10 for sarsa lambda
-
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from simple_21.environment import step
+import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 
-from simple_21.monte_carlo import step, incremental_mean, egreedy_exploration, random_action
+from simple_21.environment import step
 
-
-def discount(rate, t):
-    return rate ** (t - 1)
-
-
-def lambdo(lam, t):
-    return lam ** t
-
-
-def gamma(gam=.9):
-    return gam
-
-
-def diff(R, gamma, q_prime, q):
-    return R + (gamma * (q_prime - q))
-
-
+Axes3D
 """
 loop
 
@@ -28,67 +14,134 @@ gamma g = discount rate 0-1
 alpha a = learning rate 0-1
 lambda l = decay backward pass (discount?) 0-1
 epsilon e = exploration/exploitation
+elegibility trace E
 
 Build list of lists with action value pairs.
 When reward is earned back propagate the reward 
 based on lambda steps with the discount. Then take 
 those rewards and update the primary rewards data.
 
-diff = R + g *Q(S',A') - Q(S,A)
-add one to count
-loop over current hitory
-    Q(s,a) <- Q(s,a) + a * diff * e(s,a)
-    E(s,a) <- g * l * e(s,a)
+Initialize Q(s,a) arbitrarily, for all s in S, a in A(s)   -
+Repeat (for each episode)                                  -
+    E(s,a) = 0, for all s in S, a in A(s)                  -
+    Initialize S, A                                        -
+    Repeat (for each step of episode):
+        Take action A, observe R, S'                       -
+        Choose A' from S' using policy derived from Q (e.g., e-greedy)  -
+        diff = R + g * Q(S',A') - Q(S,A)                   -
+        E(S,A) <- E(S,A) + 1                               -
+        For all s in S, a in A(s):
+            Q(s,a) <- Q(s,a) + a * diff * E(s,a)           -
+            E(s,a) <- g * l * E(s,a)                       
 S <- S'; A <- A'
 until S is terminal
 
 This is basically monte carlo but lambda and discount are applied when calculating values 
 """
 
-states = []
-action_rewards = []
 
-for x in range(10):
-    current_states = []
-    current_action_rewards = []
-    state = [0, 0, 'other', np.nan]
-    state = step(state)
-    while state[2] != 'done':
-        while state[1] < 10:
-            state[2] = 'hit'
-            state = step(state)
+def diff(R, gamma, q_prime, q):
+    return R + (gamma * q_prime) - q
 
-            if state[:2] in states:  # this finishes out the episode before updating -- sarsa should update at each flip
-                # previous_state = state[2:]
-                index = states.index(state[:2])
-                actions = action_rewards[index]
-                previous_rewards = action_rewards[index]
-                if egreedy_exploration(previous_rewards[2]) < np.random.random():
-                    previous_action = random_action()
-                    state[2] = previous_action
-                elif previous_rewards[0] == previous_rewards[1]:
-                    previous_action = random_action()
-                    state[2] = previous_action
-                else:
-                    if previous_rewards[0] > previous_rewards[1]:
-                        previous_action = 'stick'
-                        state[2] = previous_action
-                    else:
-                        previous_action = 'hit'
-                        state[2] = previous_action
-                state = step(state)
-                if state[2] == 'done':
-                    # if state[:2] in states:
-                    #     index = states.index(state[:2])
-                    if previous_action == 'stick':
-                        action_rewards[index][0] = incremental_mean(state[3],
-                                                                    previous_rewards[0],
-                                                                    previous_rewards[2])
-                    elif previous_action == 'hit':
-                        action_rewards[index][1] = incremental_mean(state[3],
-                                                                    previous_rewards[1],
-                                                                    previous_rewards[2])
-                    action_rewards[index][2] = action_rewards[index][2] + 1
-            else:
-                states.append(state[:2])
-                action_rewards.append([0, 0, 1])
+
+def initialize():
+    state = [np.random.randint(1, 10), np.random.randint(10), 0, np.nan]
+    return state
+
+
+def egreedy_exploration(k, k_fixed=100):
+    return k_fixed / (k_fixed + k)
+
+
+def e_greed(state, previous_state):
+    if egreedy_exploration(
+            e_greedy[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]]) < np.random.random():
+        action = random_action()
+    else:
+        action = np.argmax([previous_state[0] - 1, previous_state[1] - 1])
+    e_greedy[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]] += 1
+    return action
+
+
+def random_action():
+    if np.random.random() > .5:
+        return 1
+    else:
+        return 0
+
+
+def get_difference(state, previous_state):
+    # diff = R + g * Q(S',A') - Q(S,A)
+    if state[3] in [-1, 0, 1] and (state[1] < 0 or state[1] > 21):
+        d = diff(state[3], g, np.max(Q[previous_state[0] - 1, previous_state[1] - 1]),
+                 Q[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]])
+    elif state[3] in [-1, 0, 1]:
+        d = diff(state[3], g, np.max(Q[state[0] - 1, state[1] - 1]),
+                 Q[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]])
+    else:
+        d = diff(np.max(Q[state[0] - 1, state[1] - 1]), g, np.max(Q[state[0] - 1, state[1] - 1]),
+                 Q[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]])
+    E[previous_state[0] - 1, previous_state[0] - 1, previous_state[2]] += 1
+    return d
+
+
+g = .9
+d = .9
+l = .9
+a = .9
+
+Q = np.zeros([10, 21, 2])  # dealer, player, (hit, stick)
+e_greedy = np.zeros([10, 21, 2])
+for x in range(1000):
+    state = initialize()
+    states = []
+    E = np.zeros([10, 21, 2])  # dealer, player, (hit, stick)
+    while state[2] != 2:
+        previous_state = state
+        states.append(previous_state)
+        state = step(state)
+        # E-greedy
+        current_action = e_greed(state, previous_state)
+        state[2] == current_action
+        state = step(state)
+        # Get difference for back prop
+        d = get_difference(state, previous_state)
+        # Back prop
+        # Q(s,a) <- Q(s,a) + a * diff * E(s,a)
+        for x in states:
+            Q[x[0] - 1, x[1] - 1, x[2]] = Q[x[0] - 1, x[1] - 1, x[2]] + ((a * d) * E[x[0] - 1, x[0] - 1, x[2]])
+            E[x[0] - 1, x[0] - 1, x[2]] = (g * l * E[x[0] - 1, x[0] - 1, x[2]])
+    if state[2] == 2:
+        # st = state
+        # st[2] = previous_state[2]
+        # states.append(st)
+        d = diff(state[3], g, np.max(Q[previous_state[0] - 1, previous_state[1] - 1]),
+                 Q[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]])
+        for x in states:
+            Q[x[0] - 1, x[1] - 1, x[2]] = Q[x[0] - 1, x[1] - 1, x[2]] + ((a * d) * E[x[0] - 1, x[0] - 1, x[2]])
+
+# %%
+# TODO visualize the Q max surface
+
+# action_df = pd.DataFrame(action_rewards, columns=['stick', 'hit', 'visits'])
+# state_df = pd.DataFrame(states, columns=['dealer', 'player'])
+# df = pd.concat([action_df, state_df], axis=1)
+# df['max'] = df[['hit', 'stick']].max(axis=1)
+# df.to_csv('monte_carlo.csv')
+
+# %%
+
+
+# plt.style.use('fivethirtyeight')
+#
+# fig = plt.figure(figsize=(14, 8))
+#
+# ax = fig.add_subplot(111, projection='3d')
+# ax.set_xlabel('dealer')
+# ax.set_ylabel('player')
+# ax.set_zlabel('value')
+# ax.set_ylim(12, 21)
+# ax.view_init(25, -35)
+# surf = ax.plot_trisurf(df['dealer'], df['player'], df['max'], cmap=cm.coolwarm)
+# fig.colorbar(surf)
+# plt.show()

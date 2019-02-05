@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from keras.layers import Dense, Activation, Flatten
 from keras.models import Sequential
 from keras.optimizers import Adam
@@ -46,4 +47,5 @@ dqn.fit(env, nb_steps=50000, visualize=False, verbose=2)
 dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 
 # Finally, evaluate our algorithm for 5 episodes.
-dqn.test(env, nb_episodes=5, visualize=False)
+info = dqn.test(env, nb_episodes=10000, visualize=False)
+print(pd.crosstab(np.array(info.history['episode_reward']), columns='count', normalize=True))
