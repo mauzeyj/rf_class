@@ -51,7 +51,7 @@ class twenty_one():
                 done = True
         if action == 0:
             while dealer < 17:
-                dealer = dealer + twenty_one.draw(self)
+                dealer = dealer + twenty_one.draw(self)  # TODO should be card
             if dealer > 21:
                 reward = 1
             elif dealer == player:

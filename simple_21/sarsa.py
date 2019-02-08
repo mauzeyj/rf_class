@@ -1,10 +1,7 @@
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-from simple_21.environment import step
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from simple_21.environment import step
+from simple_21.environment import twenty_one
 
 Axes3D
 """
@@ -42,11 +39,6 @@ This is basically monte carlo but lambda and discount are applied when calculati
 
 def diff(R, gamma, q_prime, q):
     return R + (gamma * q_prime) - q
-
-
-def initialize():
-    state = [np.random.randint(1, 10), np.random.randint(10), 0, np.nan]
-    return state
 
 
 def egreedy_exploration(k, k_fixed=100):
@@ -93,29 +85,31 @@ a = .9
 Q = np.zeros([10, 21, 2])  # dealer, player, (hit, stick)
 e_greedy = np.zeros([10, 21, 2])
 for x in range(1000):
-    state = initialize()
+    env = twenty_one()
+    env.reset()
     states = []
+    done = False
     E = np.zeros([10, 21, 2])  # dealer, player, (hit, stick)
-    while state[2] != 2:
-        previous_state = state
-        states.append(previous_state)
-        state = step(state)
+    while done != True:
+        # previous_state = env
+        states.append(env.state)
+        # env = step(env)
         # E-greedy
-        current_action = e_greed(state, previous_state)
-        state[2] == current_action
-        state = step(state)
+        current_action = e_greed(env, previous_state)
+        env[2] == current_action
+        env = step(env)
         # Get difference for back prop
-        d = get_difference(state, previous_state)
+        d = get_difference(env, previous_state)
         # Back prop
         # Q(s,a) <- Q(s,a) + a * diff * E(s,a)
         for x in states:
             Q[x[0] - 1, x[1] - 1, x[2]] = Q[x[0] - 1, x[1] - 1, x[2]] + ((a * d) * E[x[0] - 1, x[0] - 1, x[2]])
             E[x[0] - 1, x[0] - 1, x[2]] = (g * l * E[x[0] - 1, x[0] - 1, x[2]])
-    if state[2] == 2:
+    if env[2] == 2:
         # st = state
         # st[2] = previous_state[2]
         # states.append(st)
-        d = diff(state[3], g, np.max(Q[previous_state[0] - 1, previous_state[1] - 1]),
+        d = diff(env[3], g, np.max(Q[previous_state[0] - 1, previous_state[1] - 1]),
                  Q[previous_state[0] - 1, previous_state[1] - 1, previous_state[2]])
         for x in states:
             Q[x[0] - 1, x[1] - 1, x[2]] = Q[x[0] - 1, x[1] - 1, x[2]] + ((a * d) * E[x[0] - 1, x[0] - 1, x[2]])
