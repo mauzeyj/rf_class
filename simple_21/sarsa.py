@@ -81,7 +81,7 @@ g = .9
 d = .9
 l = .9
 a = .9
-
+#https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
 Q = np.zeros([10, 21, 2])  # dealer, player, (hit, stick)
 e_greedy = np.zeros([10, 21, 2])
 for x in range(1000):

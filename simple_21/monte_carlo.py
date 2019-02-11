@@ -36,7 +36,7 @@ action_rewards = []
 # TODO why are my numbers shifted lower.  Expect 21 to have argmax of around 1
 env = twenty_one()
 
-for x in range(50000):
+for x in range(5000):
         state = env.reset()
         current_states_index = []
         current_actions = []
