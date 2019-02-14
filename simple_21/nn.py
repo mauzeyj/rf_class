@@ -1,12 +1,10 @@
-import numpy as np
-
-from keras.models import Sequential
+# https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
 from keras.layers import Dense, Activation, Flatten
+from keras.models import Sequential
 from keras.optimizers import Adam
-
 from rl.agents.dqn import DQNAgent
-from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
+from rl.policy import BoltzmannQPolicy
 
 nb_actions = [0, 1]
 
