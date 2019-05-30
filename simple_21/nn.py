@@ -1,43 +1,55 @@
 # https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
-from keras.layers import Dense, Activation, Flatten
-from keras.models import Sequential
-from keras.optimizers import Adam
-from rl.agents.dqn import DQNAgent
-from rl.memory import SequentialMemory
-from rl.policy import BoltzmannQPolicy
-
-nb_actions = [0, 1]
-
-# Next, we build a very simple model.
-model = Sequential()
-model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(nb_actions))
-
-model.add(Activation('linear'))
-print(model.summary())
-
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
-# even the metrics!
-memory = SequentialMemory(limit=50000, window_length=1)
-policy = BoltzmannQPolicy()
-dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
-               target_model_update=1e-2, policy=policy)
-dqn.compile(Adam(lr=1e-3), metrics=['mae'])
-
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
-dqn.fit(env, nb_steps=50000, visualize=True, verbose=2)
-
-# After training is done, we save the final weights.
-dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 
 # %%
-# Finally, evaluate our algorithm for 5 episodes.
-dqn.test(env, nb_episodes=5, visualize=True)
+from keras.layers import Dense, InputLayer
+from keras.models import Sequential
+from keras.optimizers import Adam
+import numpy as np
+from simple_21.environment import twenty_one
+import pandas as pd
+import matplotlib.pyplot as plt
+
+env = twenty_one()
+
+
+model = Sequential()
+model.add(Dense(100, activation='sigmoid', input_shape=(2,)))  # shape should be
+model.add(Dense(100))
+model.add(Dense(2, activation='linear'))
+model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+
+num_episodes = 5000000
+y = 0.95
+eps = 0.5
+decay_factor = 0.999
+r_avg_list = []
+target_list = []
+for i in range(num_episodes):
+    s = env.reset()
+    eps *= decay_factor
+    if i % 100 == 0:
+        print("Episode {} of {}".format(i + 1, num_episodes))
+    done = False
+    r_sum = 0
+    target_sum = 0
+    while not done:
+        if np.random.random() < eps:
+            a = np.random.randint(0, 2)
+        else:
+            a = np.argmax(model.predict(s.reshape(-1, 2)))
+        new_s, r, done, _ = env.step(a)
+        target = r + y * np.max(model.predict(new_s.reshape(-1, 2)))
+        target_vec = model.predict(s.reshape(-1, 2))[0]
+        target_vec[a] = target
+        model.fit(s.reshape(-1, 2), target_vec.reshape(-1, 2), epochs=1, verbose=0)
+        s = new_s
+        r_sum += r
+        target_sum += target
+    target_list.append(target_sum)
+    r_avg_list.append(r_sum / 1000)
+
+plt.plot(target_list)
+plt.ylabel('rewards')
+plt.xlabel('episodes')
+plt.title('{} episodes'.format(num_episodes))
+plt.show()
