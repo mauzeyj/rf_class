@@ -10,20 +10,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 env = twenty_one()
-
+#todo add memory replay
 
 model = Sequential()
-model.add(Dense(100, activation='sigmoid', input_shape=(2,)))  # shape should be
-model.add(Dense(100))
-model.add(Dense(2, activation='linear'))
+model.add(Dense(100, activation='sigmoid', input_shape=(2,)))  # todo change to relu
+model.add(Dense(100))  # todo change to relu
+model.add(Dense(2, activation='linear'))  #todo change to softmax
 model.compile(loss='mse', optimizer='adam', metrics=['mae'])
 
-num_episodes = 5000000
-y = 0.95
-eps = 0.5
+num_episodes = 50000
+y = 0.95  # discount rate
+eps = 0.5  # egreedy
 decay_factor = 0.999
 r_avg_list = []
 target_list = []
+rewards = []
 for i in range(num_episodes):
     s = env.reset()
     eps *= decay_factor
@@ -37,7 +38,7 @@ for i in range(num_episodes):
             a = np.random.randint(0, 2)
         else:
             a = np.argmax(model.predict(s.reshape(-1, 2)))
-        new_s, r, done, _ = env.step(a)
+        new_s, r, done, info = env.step(a)
         target = r + y * np.max(model.predict(new_s.reshape(-1, 2)))
         target_vec = model.predict(s.reshape(-1, 2))[0]
         target_vec[a] = target
@@ -47,6 +48,7 @@ for i in range(num_episodes):
         target_sum += target
     target_list.append(target_sum)
     r_avg_list.append(r_sum / 1000)
+    rewards.append(r)
 
 plt.plot(target_list)
 plt.ylabel('rewards')
