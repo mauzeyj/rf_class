@@ -8,15 +8,23 @@ import numpy as np
 from simple_21.environment import twenty_one
 import pandas as pd
 import matplotlib.pyplot as plt
+import gym
 
-env = twenty_one()
+env = gym.make('Blackjack-v0')
+# todo put in a class
+
+# env = twenty_one()
+
 #todo add memory replay
+# todo add query environment for observation and action space
 
+# create network
 model = Sequential()
-model.add(Dense(100, activation='relu', input_shape=(2,)))  # todo change to relu
+model.add(Dense(100, activation='relu', input_shape=(3,)))  # todo change to relu
 model.add(Dense(100, activation='relu'))  # todo change to relu
 model.add(Dense(2, activation='softmax'))  # todo change to softmax
 model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+
 
 num_episodes = 50000
 y = 0.95  # discount rate
@@ -26,23 +34,28 @@ r_avg_list = []
 target_list = []
 rewards = []
 for i in range(num_episodes):
+    # reset environment to start episode
     s = env.reset()
+    # calulate current exploit vs explore rate
     eps *= decay_factor
+    # print every 100 episode results
     if i % 100 == 0:
         print("Episode {} of {}".format(i + 1, num_episodes))
+    # set done to false because episode just started
     done = False
+
     r_sum = 0
     target_sum = 0
     while not done:
         if np.random.random() < eps:
             a = np.random.randint(0, 2)
         else:
-            a = np.argmax(model.predict(s.reshape(-1, 2)))
+            a = np.argmax(model.predict(np.array(s).reshape(-1, 3)))
         new_s, r, done, info = env.step(a)
-        target = r + y * np.max(model.predict(new_s.reshape(-1, 2)))
-        target_vec = model.predict(s.reshape(-1, 2))[0]
+        target = r + y * np.max(model.predict(np.array(new_s).reshape(-1, 3)))
+        target_vec = model.predict(np.array(s).reshape(-1, 3))[0]
         target_vec[a] = target
-        model.fit(s.reshape(-1, 2), target_vec.reshape(-1, 2), epochs=1, verbose=0)
+        model.fit(np.array(s).reshape(-1, 3), np.array(target_vec).reshape(-1, 2), epochs=1, verbose=0)
         s = new_s
         r_sum += r
         target_sum += target
