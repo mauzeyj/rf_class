@@ -13,9 +13,9 @@ env = twenty_one()
 #todo add memory replay
 
 model = Sequential()
-model.add(Dense(100, activation='sigmoid', input_shape=(2,)))  # todo change to relu
-model.add(Dense(100))  # todo change to relu
-model.add(Dense(2, activation='linear'))  #todo change to softmax
+model.add(Dense(100, activation='relu', input_shape=(2,)))  # todo change to relu
+model.add(Dense(100, activation='relu'))  # todo change to relu
+model.add(Dense(2, activation='softmax'))  # todo change to softmax
 model.compile(loss='mse', optimizer='adam', metrics=['mae'])
 
 num_episodes = 50000
